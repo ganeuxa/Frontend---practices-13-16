@@ -8,7 +8,7 @@ const APP_SHELL = [
     '/manifest.json'
 ];
 
-// Установка
+
 self.addEventListener('install', event => {
     event.waitUntil(
         caches.open(CACHE_NAME)
@@ -17,7 +17,7 @@ self.addEventListener('install', event => {
     );
 });
 
-// Активация
+
 self.addEventListener('activate', event => {
     event.waitUntil(
         caches.keys().then(keys => {
@@ -29,7 +29,7 @@ self.addEventListener('activate', event => {
     );
 });
 
-// Перехват запросов
+
 self.addEventListener('fetch', event => {
     const url = new URL(event.request.url);
     
@@ -41,7 +41,7 @@ self.addEventListener('fetch', event => {
     );
 });
 
-// === PUSH NOTIFICATIONS ===
+
 self.addEventListener('push', event => {
     let data = { title: 'Новое уведомление', body: '' };
     
@@ -61,7 +61,7 @@ self.addEventListener('push', event => {
     );
 });
 
-// Обработка клика по уведомлению
+
 self.addEventListener('notificationclick', event => {
     event.notification.close();
     event.waitUntil(

@@ -1,12 +1,12 @@
 // Подключение к Socket.IO серверу
 const socket = io('http://localhost:3001');
 
-// Элементы DOM
+
 const form = document.getElementById('note-form');
 const input = document.getElementById('note-input');
 const list = document.getElementById('notes-list');
 
-// Загрузка заметок
+
 function loadNotes() {
     const notes = JSON.parse(localStorage.getItem('notes') || '[]');
     list.innerHTML = notes.map(note => 
@@ -19,7 +19,7 @@ function loadNotes() {
     ).join('');
 }
 
-// Добавление заметки
+
 function addNote(text) {
     const notes = JSON.parse(localStorage.getItem('notes') || '[]');
     const newNote = {
@@ -35,7 +35,7 @@ function addNote(text) {
     socket.emit('newTask', newNote);
 }
 
-// Обработка формы
+
 form.addEventListener('submit', (e) => {
     e.preventDefault();
     const text = input.value.trim();
@@ -45,14 +45,14 @@ form.addEventListener('submit', (e) => {
     }
 });
 
-// Получение событий от других клиентов
+
 socket.on('taskAdded', (task) => {
     console.log('Задача от другого клиента:', task);
     showNotification(`Новая задача: ${task.text}`);
     loadNotes(); // Обновляем список
 });
 
-// Показ всплывающего уведомления
+
 function showNotification(message) {
     const notification = document.createElement('div');
     notification.className = 'notification';
@@ -61,12 +61,12 @@ function showNotification(message) {
     setTimeout(() => notification.remove(), 3000);
 }
 
-// Первоначальная загрузка
+
 loadNotes();
 
-// === PUSH NOTIFICATIONS ===
 
-// Преобразование base64 в Uint8Array
+
+
 function urlBase64ToUint8Array(base64String) {
     const padding = '='.repeat((4 - base64String.length % 4) % 4);
     const base64 = (base64String + padding)
@@ -80,7 +80,7 @@ function urlBase64ToUint8Array(base64String) {
     return outputArray;
 }
 
-// Подписка на push
+
 async function subscribeToPush() {
     if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
         alert('Push notifications not supported');
@@ -110,7 +110,7 @@ async function subscribeToPush() {
     }
 }
 
-// Отписка от push
+
 async function unsubscribeFromPush() {
     if (!('serviceWorker' in navigator)) return;
 
@@ -129,7 +129,7 @@ async function unsubscribeFromPush() {
     }
 }
 
-// Кнопки управления push
+
 const enableBtn = document.getElementById('enable-push');
 const disableBtn = document.getElementById('disable-push');
 
@@ -169,7 +169,7 @@ if (enableBtn && disableBtn) {
     });
 }
 
-// Регистрация Service Worker
+
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', async () => {
         try {

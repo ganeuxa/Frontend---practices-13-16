@@ -22,10 +22,10 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
-// Раздаём статические файлы (ваше PWA приложение)
+
 app.use(express.static(path.join(__dirname, '../')));
 
-// Хранилище подписок (в памяти)
+
 let subscriptions = [];
 
 const server = http.createServer(app);
@@ -44,7 +44,7 @@ io.on('connection', (socket) => {
     // Рассылаем всем клиентам через WebSocket
     io.emit('taskAdded', task);
 
-    // Отправляем push-уведомление всем подписчикам
+    
     const payload = JSON.stringify({
       title: 'Новая задача',
       body: task.text
@@ -61,13 +61,13 @@ io.on('connection', (socket) => {
   });
 });
 
-// Эндпоинт для сохранения подписки
+
 app.post('/subscribe', (req, res) => {
   subscriptions.push(req.body);
   res.status(201).json({ message: 'Подписка сохранена' });
 });
 
-// Эндпоинт для удаления подписки
+
 app.post('/unsubscribe', (req, res) => {
   const { endpoint } = req.body;
   subscriptions = subscriptions.filter(sub => sub.endpoint !== endpoint);
