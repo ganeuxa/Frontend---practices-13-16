@@ -1,0 +1,22 @@
+{
+  "name": "Заметки App Shell",
+  "short_name": "Заметки",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#4285f4",
+  "description": "PWA с архитектурой App Shell",
+  "icons": [
+    {
+      "src": "/icons/favicon-128x128.png",
+      "sizes": "128x128",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/favicon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

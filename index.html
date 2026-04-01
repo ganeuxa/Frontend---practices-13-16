@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Заметки (WebSocket + Push)</title>
+    
+    <!-- PWA -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#4285f4">
+    
+    <!-- Стили -->
+    <link rel="stylesheet" href="https://unpkg.com/chota@latest">
+    
+    <style>
+        .notification {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: #4285f4;
+            color: white;
+            padding: 1rem;
+            border-radius: 5px;
+            z-index: 1000;
+            animation: slideIn 0.3s ease;
+        }
+        @keyframes slideIn {
+            from { transform: translateX(400px); }
+            to { transform: translateX(0); }
+        }
+        footer {
+            margin-top: 2rem;
+            padding: 1rem;
+            border-top: 1px solid #ddd;
+        }
+    </style>
+</head>
+<body>
+    <header class="container">
+        <h1>📝 Заметки (Real-time)</h1>
+    </header>
+
+    <main class="container">
+        <form id="note-form" class="row is-center">
+            <input class="col-9" type="text" id="note-input" placeholder="Введите заметку" required>
+            <button class="col-3 button primary" type="submit">Добавить</button>
+        </form>
+
+        <h2 style="margin-top: 2rem;">Список заметок</h2>
+        <ul id="notes-list" style="list-style: none; padding-left: 0;"></ul>
+    </main>
+
+    <footer class="is-center">
+        <button id="enable-push" class="button success">Включить уведомления</button>
+        <button id="disable-push" class="button error" style="display:none;">Отключить уведомления</button>
+    </footer>
+
+    <!-- Socket.IO клиент -->
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
