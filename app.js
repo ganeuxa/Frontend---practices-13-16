@@ -1,5 +1,5 @@
 // Подключение к Socket.IO серверу
-const socket = io('http://localhost:3001');
+const socket = io('https://localhost:3001');
 
 
 const form = document.getElementById('note-form');
@@ -91,14 +91,14 @@ async function subscribeToPush() {
         const registration = await navigator.serviceWorker.ready;
         
         // ВСТАВЬТЕ СВОЙ ПУБЛИЧНЫЙ КЛЮЧ!
-        const publicKey = 'ВАШ_ПУБЛИЧНЫЙ_VAPID_КЛЮЧ';
+        const publicKey = 'BFxiINbiF3NwDmcS0jDekbwDtMClU2rFJ7o-MtDEqVIhAH4rlAcpYF5wt7Z87QLyW0BsITc9PxIwXPA1369xxkk';
         
         const subscription = await registration.pushManager.subscribe({
             userVisibleOnly: true,
             applicationServerKey: urlBase64ToUint8Array(publicKey)
         });
 
-        await fetch('http://localhost:3001/subscribe', {
+        await fetch('https://localhost:3001/subscribe', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(subscription)
@@ -118,7 +118,7 @@ async function unsubscribeFromPush() {
     const subscription = await registration.pushManager.getSubscription();
     
     if (subscription) {
-        await fetch('http://localhost:3001/unsubscribe', {
+        await fetch('https://localhost:3001/unsubscribe', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ endpoint: subscription.endpoint })
@@ -180,3 +180,4 @@ if ('serviceWorker' in navigator) {
         }
     });
 }
+
