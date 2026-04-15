@@ -83,18 +83,30 @@ node server_frontend.js
 ## 📂 Структура
 
 ```
-Проект/
+ФРОНТЭНД ИВАЩЕНКО/
 ├── content/
-│   ├── home.html
-│   └── about.html
-├── server/
-│   ├── server_push.js
-│   ├── server_frontend.js
-│   └── сертификаты (.pem)
-├── index.html
-├── app.js
-├── sw.js
-└── manifest.json
+│ ├── about.html # Страница "О проекте"
+│ └── home.html # Главная страница с формами
+├── icons/ # Иконки для PWA
+│ ├── favicon-16x16.png
+│ ├── favicon-128x128.png
+│ └── favicon-512x512.png
+├── server/ # Серверная часть
+│ ├── node_modules/ # Зависимости сервера
+│ ├── localhost+2-key.pem # HTTPS приватный ключ
+│ ├── localhost+2.pem # HTTPS сертификат
+│ ├── package.json # Зависимости сервера
+│ ├── package-lock.json
+│ ├── server_frontend.js # Сервер статики (порт 4001)
+│ └── server_push.js # WebSocket + Push сервер (порт 3001)
+├── node_modules/ # Корневые зависимости
+├── package.json # Корневые зависимости
+├── package-lock.json
+├── index.html # Entry point (App Shell)
+├── app.js # Клиентская логика
+├── sw.js # Service Worker
+├── manifest.json # Web App Manifest
+└── README.md # Документация
 ```
 
 ---
