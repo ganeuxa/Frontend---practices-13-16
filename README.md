@@ -1,5 +1,3 @@
-Конечно! Вот готовый файл `README.md`:
-
 ```markdown
 # 📝 Заметки (Notes PWA)
 
