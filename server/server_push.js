@@ -8,11 +8,7 @@ const cors = require('cors');
 const path = require('path');
 
 const app = express();
-
-app.use(cors({
-    origin: 'https://localhost:4001',
-    credentials: true
-}));
+app.use(cors({ origin: 'https://localhost:4001', credentials: true }));
 app.use(bodyParser.json());
 
 const vapidKeys = {
@@ -21,8 +17,8 @@ const vapidKeys = {
 };
 webpush.setVapidDetails('mailto:your-email@example.com', vapidKeys.publicKey, vapidKeys.privateKey);
 
-// 🔥 Инициализация Map
 const subscriptions = new Map();
+const reminders = new Map();
 
 const optionsHttps = {
     key: fs.readFileSync(path.join(__dirname, 'localhost+2-key.pem')),
@@ -30,104 +26,143 @@ const optionsHttps = {
 };
 
 const server = https.createServer(optionsHttps, app);
-
 const io = socketIo(server, { 
-    cors: { 
-        origin: 'https://localhost:4001', 
-        methods: ['GET','POST'],
-        credentials: true
-    } 
+    cors: { origin: 'https://localhost:4001', methods: ['GET','POST'], credentials: true } 
 });
 
 io.on('connection', socket => {
     console.log('✅ Client connected:', socket.id);
-    console.log('📊 Active subscriptions:', subscriptions.size);
 
     socket.on('newTask', task => {
         console.log('📩 New task:', task.text);
-        console.log('📤 Sending to', subscriptions.size, 'subscribers');
-        
         io.emit('taskAdded', task);
-
         if (subscriptions.size > 0) {
-            const payload = JSON.stringify({ 
-                title: 'Новая задача', 
-                body: task.text 
+            const payload = JSON.stringify({ title: 'Новая задача', body: task.text });
+            subscriptions.forEach(sub => {
+                webpush.sendNotification(sub, payload).catch(err => console.error('❌ Push error:', err.message));
+            });
+        }
+    });
+
+    socket.on('newReminder', reminder => {
+        const { id, text, reminderTime } = reminder;
+        const delay = reminderTime - Date.now();
+        
+        console.log('⏰ New reminder:', text, 'in', Math.round(delay/1000), 'seconds');
+        
+        if (delay <= 0) {
+            console.log('⚠️ Time already passed');
+            return;
+        }
+
+        const timeoutId = setTimeout(() => {
+            console.log('🔔 Reminder triggered:', text);
+            
+            const payload = JSON.stringify({
+                title: '⏰ Напоминание',
+                body: text,
+                reminderId: id
             });
 
-            subscriptions.forEach((sub, endpoint) => {
-                console.log('🔔 Sending push to:', endpoint.substring(0, 50) + '...');
+            subscriptions.forEach(sub => {
                 webpush.sendNotification(sub, payload)
                     .catch(err => console.error('❌ Push error:', err.message));
             });
-        } else {
-            console.log('⚠️ No subscribers - push NOT sent');
-        }
+
+            io.emit('reminderTriggered', { id, text });
+            
+            
+            
+            console.log('⏰ Reminder still in Map for snooze');
+        }, delay);
+
+        reminders.set(id, { timeoutId, text, reminderTime });
+        console.log('✅ Reminder scheduled. Total active:', reminders.size);
     });
 
     socket.on('disconnect', () => console.log('❌ Client disconnected:', socket.id));
 });
 
-// ✅ ПОДПИСКА
 app.post('/subscribe', (req, res) => {
-    console.log('📝 ====== SUBSCRIBE REQUEST =======');
-    console.log('Request body:', JSON.stringify(req.body, null, 2));
-    
     if (!req.body || !req.body.endpoint) {
-        console.error('❌ Invalid subscription');
         return res.status(400).json({ error: 'Invalid subscription' });
     }
-    
-    const endpoint = req.body.endpoint;
-    console.log('Endpoint:', endpoint.substring(0, 60) + '...');
-    console.log('Subscriptions before:', subscriptions.size);
-    
-    // 🔥 Map.set() - добавляем или обновляем
-    subscriptions.set(endpoint, req.body);
-    
-    console.log('✅ Subscription added');
-    console.log('Subscriptions after:', subscriptions.size);
-    console.log('📝 =========================================\n');
-    
+    subscriptions.set(req.body.endpoint, req.body);
+    console.log('📝 Subscription added. Total:', subscriptions.size);
     res.status(201).json({ message: 'Subscribed', count: subscriptions.size });
 });
 
-// ✅ ОТПИСКА
 app.post('/unsubscribe', (req, res) => {
-    console.log('🗑️ ====== UNSUBSCRIBE REQUEST =======');
-    console.log('Request body endpoint:', req.body.endpoint);
-    console.log('Subscriptions before:', subscriptions.size);
-    
     if (!req.body || !req.body.endpoint) {
-        console.error('❌ Invalid unsubscribe request');
         return res.status(400).json({ error: 'Invalid request' });
     }
+    const deleted = subscriptions.delete(req.body.endpoint);
+    console.log('🗑️ Subscription removed. Total:', subscriptions.size);
+    res.status(200).json({ message: 'Unsubscribed', deleted, count: subscriptions.size });
+});
+
+
+app.post('/snooze', (req, res) => {
+    const reminderId = parseInt(req.query.reminderId, 10);
     
-    const endpoint = req.body.endpoint;
+    console.log('😴 Snooze request for:', reminderId);
     
-    // 🔥 Map.delete() - удаляем по ключу
-    const deleted = subscriptions.delete(endpoint);
+    if (!reminderId || !reminders.has(reminderId)) {
+        console.log('❌ Reminder not found');
+        return res.status(404).json({ error: 'Reminder not found' });
+    }
+
+    const reminder = reminders.get(reminderId);
+    clearTimeout(reminder.timeoutId);
+
+    const newDelay = 5 * 60 * 1000;
+    const newReminderTime = Date.now() + newDelay;
     
-    console.log('Subscriptions after:', subscriptions.size);
-    console.log('Deleted:', deleted ? 'YES ✅' : 'NO ❌');
-    console.log('🗑️ =========================================\n');
+    const newTimeoutId = setTimeout(() => {
+        console.log('🔔 Snoozed reminder triggered:', reminder.text);
+        
+        const payload = JSON.stringify({
+            title: '⏰ Напоминание (отложенное)',
+            body: reminder.text,
+            reminderId: reminderId
+        });
+
+        subscriptions.forEach(sub => {
+            webpush.sendNotification(sub, payload)
+                .catch(err => console.error('❌ Push error:', err.message));
+        });
+
+        io.emit('reminderTriggered', { id: reminderId, text: reminder.text, snoozed: true });
+        // reminders.delete(reminderId);
+    }, newDelay);
+
+    reminders.set(reminderId, { 
+        timeoutId: newTimeoutId, 
+        text: reminder.text, 
+        reminderTime: newReminderTime,
+        snoozed: true
+    });
+    
+    console.log('✅ Reminder snoozed');
+    
+    
+    io.emit('reminderSnoozed', {
+        id: reminderId,
+        newTime: newReminderTime
+    });
     
     res.status(200).json({ 
-        message: 'Unsubscribed',
-        deleted: deleted,
-        count: subscriptions.size
+        message: 'Reminder snoozed for 5 minutes',
+        newTime: newReminderTime
     });
 });
 
-// Эндпоинт для проверки
 app.get('/subscriptions', (req, res) => {
-    res.json({ 
-        count: subscriptions.size,
-        endpoints: Array.from(subscriptions.keys())
-    });
+    res.json({ count: subscriptions.size, endpoints: Array.from(subscriptions.keys()) });
 });
 
 server.listen(3001, () => {
     console.log('🚀 Server running at https://localhost:3001');
-    console.log('📊 Initial subscriptions:', subscriptions.size);
+    console.log('📊 Subscriptions:', subscriptions.size);
+    console.log('⏰ Reminders:', reminders.size);
 });

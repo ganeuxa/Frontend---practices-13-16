@@ -8,10 +8,10 @@ const app = express();
 
 app.use(cors());
 
-// 🔥 ВАЖНО: Раздаём файлы из РОДИТЕЛЬСКОЙ папки (..)
+
 app.use(express.static(path.join(__dirname, '..')));
 
-// 🔥 Пути к сертификатам
+
 const options = {
     key: fs.readFileSync(path.join(__dirname, 'localhost+2-key.pem')),
     cert: fs.readFileSync(path.join(__dirname, 'localhost+2.pem'))
